@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b2d57">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>ALMAQ Móvil</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: max(18px, env(safe-area-inset-top)) 14px max(22px, env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(160deg, #071b37, #0b2d57);
+      color: white;
+    }
+    .app {
+      width: 100%;
+      max-width: 430px;
+      text-align: center;
+    }
+    .logo {
+      width: 150px;
+      height: 150px;
+      border-radius: 30px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.3);
+      margin-bottom: 18px;
+    }
+    h1 { margin: 0 0 8px; font-size: 31px; }
+    .sub { margin: 0 0 26px; color: #c9d8e8; font-size: 16px; }
+    .btn {
+      width: 100%;
+      min-height: 66px;
+      border: 0;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .principal { background: #fff; color: #0b2d57; }
+    .scanner { background: #19b5e8; color: #062341; }
+    .nota { margin-top: 18px; font-size: 12px; color: #a9bfd5; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <img src="icon-192.png" class="logo" alt="ALMAQ">
+    <h1>ALMAQ Móvil</h1>
+    <p class="sub">Gestión de almacén · v2.0</p>
+
+    <button class="btn principal" onclick="abrirALMAQ()">📦 ABRIR ALMAQ</button>
+    <button class="btn scanner" onclick="location.href='scanner.html'">📷 ESCANEAR PRODUCTO</button>
+
+    <p class="nota">La aplicación usa ALMAQ v1.6 como motor estable.</p>
+  </main>
+
+  <script>
+    const ALMAQ_URL = "https://script.google.com/macros/s/AKfycbzSH5-GEdpSbYh-C9ZA6E_6I9lw_e7Wp93nN9nxwfLbQjN_hut6UnUoJrk73VsR2Xps/exec";
+
+    function abrirALMAQ() {
+      window.location.href = ALMAQ_URL;
+    }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
