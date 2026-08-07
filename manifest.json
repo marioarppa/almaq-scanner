@@ -1,7 +1,7 @@
 {
   "name": "ALMAQ Móvil",
   "short_name": "ALMAQ",
-  "description": "Gestión móvil de almacén ALMAQ",
+  "description": "ALMAQ Móvil v2.0.1 · acceso directo al escáner",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
