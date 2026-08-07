@@ -3,16 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#1F4E78">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="favicon.ico">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <title>ALMAQ · Escáner</title>
+
+  <title>ALMAQ Móvil v2.0.3 · Escáner</title>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 12px;
@@ -20,7 +18,13 @@
       background: #F3F6F9;
       color: #1F2937;
     }
-    .app { width: 100%; max-width: 600px; margin: 0 auto; }
+
+    .app {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
     .titulo {
       background: #1F4E78;
       color: white;
@@ -31,18 +35,21 @@
       font-weight: bold;
       margin-bottom: 12px;
     }
+
     .card {
       background: white;
       border-radius: 14px;
       padding: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,.08);
     }
+
     #reader {
       width: 100%;
       overflow: hidden;
       border-radius: 12px;
       background: #000;
     }
+
     .mensaje {
       margin-top: 12px;
       text-align: center;
@@ -50,6 +57,7 @@
       font-weight: bold;
       min-height: 24px;
     }
+
     .volver {
       width: 100%;
       min-height: 58px;
@@ -60,35 +68,65 @@
       color: white;
       font-size: 18px;
       font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
+
 <body>
+
 <div class="app">
-  <div class="titulo">📷 ALMAQ · ESCÁNER · v2.0.2</div>
-  <div class="card">
-    <div id="reader"></div>
-    <div id="mensaje" class="mensaje">Apunta la cámara al QR del producto.</div>
-    <button class="volver" onclick="volverALMAQ()">📦 ABRIR ALMAQ</button>
+
+  <div class="titulo">
+    📷 ALMAQ · ESCÁNER · v2.0.3
   </div>
+
+  <div class="card">
+
+    <div id="reader"></div>
+
+    <div id="mensaje" class="mensaje">
+      Apunta la cámara al QR del producto.
+    </div>
+
+    <button class="volver" onclick="volverALMAQ()">
+      📦 ABRIR ALMAQ
+    </button>
+
+  </div>
+
 </div>
 
 <script>
-  const ALMAQ_URL = "https://script.google.com/macros/s/AKfycbyY0FH3fAvL07WEjZXYAjoQxBKpMc-DNhkbB1fX1nLk-3NEymnjbwQPqKDcnQ2GPyjF/exec";
+
+  const ALMAQ_URL =
+    "https://script.google.com/macros/s/AKfycbz3sYKuzgLp61Gxd2EmTUnau6qKGOAT4IYz4FdPS1w9dVe-cjG1uUjIxnsa6A6qkq-G/exec";
+
   let terminado = false;
 
   function codigoDetectado(texto) {
+
     if (terminado) return;
+
     terminado = true;
 
     const codigo = String(texto || "").trim();
-    document.getElementById("mensaje").textContent = "✅ Código leído: " + codigo;
 
-    if (navigator.vibrate) navigator.vibrate(120);
+    document.getElementById("mensaje").textContent =
+      "✅ Código leído: " + codigo;
 
-    setTimeout(() => {
-      window.location.href = ALMAQ_URL + "?codigo=" + encodeURIComponent(codigo);
-    }, 300);
+    if (navigator.vibrate) {
+      navigator.vibrate(120);
+    }
+
+    setTimeout(function() {
+
+      window.location.href =
+        ALMAQ_URL +
+        "?codigo=" +
+        encodeURIComponent(codigo);
+
+    }, 400);
   }
 
   function volverALMAQ() {
@@ -99,12 +137,27 @@
     "reader",
     {
       fps: 10,
-      qrbox: (viewfinderWidth) => {
-        const ancho = Math.min(280, Math.floor(viewfinderWidth * 0.8));
-        return { width: ancho, height: ancho };
+
+      qrbox: function(viewfinderWidth, viewfinderHeight) {
+
+        const ancho =
+          Math.min(
+            280,
+            Math.floor(viewfinderWidth * 0.8)
+          );
+
+        return {
+          width: ancho,
+          height: ancho
+        };
       },
+
       rememberLastUsedCamera: true,
-      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+
+      supportedScanTypes: [
+        Html5QrcodeScanType.SCAN_TYPE_CAMERA
+      ],
+
       formatsToSupport: [
         Html5QrcodeSupportedFormats.QR_CODE,
         Html5QrcodeSupportedFormats.EAN_13,
@@ -118,13 +171,14 @@
     false
   );
 
-  lector.render(codigoDetectado, () => {});
+  lector.render(
+    codigoDetectado,
+    function() {
+      // Los intentos sin lectura son normales.
+    }
+  );
 
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
-    });
-  }
 </script>
+
 </body>
 </html>
