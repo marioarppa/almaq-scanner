@@ -1,4 +1,5 @@
-const CACHE = "almaq-pwa-v2.0.1";
+const CACHE = "almaq-pwa-v2.0.3";
+
 const ASSETS = [
   "./",
   "./index.html",
@@ -13,6 +14,7 @@ self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(ASSETS))
   );
+
   self.skipWaiting();
 });
 
@@ -26,6 +28,7 @@ self.addEventListener("activate", event => {
       )
     )
   );
+
   self.clients.claim();
 });
 
@@ -36,7 +39,10 @@ self.addEventListener("fetch", event => {
     fetch(event.request)
       .then(response => {
         const copy = response.clone();
-        caches.open(CACHE).then(cache => cache.put(event.request, copy));
+
+        caches.open(CACHE)
+          .then(cache => cache.put(event.request, copy));
+
         return response;
       })
       .catch(() => caches.match(event.request))
