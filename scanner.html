@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1F4E78">
 
-  <title>ALMAQ Móvil v2.0.4 · Escáner</title>
+  <title>ALMAQ Móvil v2.0.4 PDF · Escáner</title>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -81,7 +81,7 @@
 <div class="app">
 
   <div class="titulo">
-    📷 ALMAQ · ESCÁNER · v2.0.4
+    📷 ALMAQ · ESCÁNER · v2.0.4 PDF
   </div>
 
   <div class="card">
@@ -103,12 +103,11 @@
 <script>
 
   const ALMAQ_URL =
-    "https://script.google.com/macros/s/AKfycbyPDQqw1ksT8ga2yxDrQZ51mq1tjnI6u2NwCU53nLc_8OcrNCSa_Gt6QdVsmG2N8Tw5/exec";
+    "https://script.google.com/macros/s/AKfycbzuMW3SskIays057sn8HvHY87PCtbNSoMWNdFUR_fg6-5vSU92I4YVZJeoLSqYJqFyT/exec";
 
   let terminado = false;
 
   function codigoDetectado(texto) {
-
     if (terminado) return;
 
     terminado = true;
@@ -123,29 +122,23 @@
     }
 
     setTimeout(function() {
-
       window.location.href =
         ALMAQ_URL +
         "?codigo=" +
         encodeURIComponent(codigo);
-
     }, 400);
   }
 
-
   function volverALMAQ() {
-
     window.location.href = ALMAQ_URL;
   }
-
 
   const lector = new Html5QrcodeScanner(
     "reader",
     {
       fps: 10,
 
-      qrbox: function(viewfinderWidth, viewfinderHeight) {
-
+      qrbox: function(viewfinderWidth) {
         const ancho =
           Math.min(
             280,
@@ -176,7 +169,6 @@
     },
     false
   );
-
 
   lector.render(
     codigoDetectado,
