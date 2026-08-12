@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1F4E78">
 
-  <title>ALMAQ Móvil v2.0.3 · Escáner</title>
+  <title>ALMAQ Móvil v2.0.4 · Escáner</title>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -78,7 +81,7 @@
 <div class="app">
 
   <div class="titulo">
-    📷 ALMAQ · ESCÁNER · v2.0.3
+    📷 ALMAQ · ESCÁNER · v2.0.4
   </div>
 
   <div class="card">
@@ -100,7 +103,7 @@
 <script>
 
   const ALMAQ_URL =
-    "https://script.google.com/macros/s/AKfycbz3sYKuzgLp61Gxd2EmTUnau6qKGOAT4IYz4FdPS1w9dVe-cjG1uUjIxnsa6A6qkq-G/exec";
+    "https://script.google.com/macros/s/AKfycbyPDQqw1ksT8ga2yxDrQZ51mq1tjnI6u2NwCU53nLc_8OcrNCSa_Gt6QdVsmG2N8Tw5/exec";
 
   let terminado = false;
 
@@ -129,9 +132,12 @@
     }, 400);
   }
 
+
   function volverALMAQ() {
+
     window.location.href = ALMAQ_URL;
   }
+
 
   const lector = new Html5QrcodeScanner(
     "reader",
@@ -170,6 +176,7 @@
     },
     false
   );
+
 
   lector.render(
     codigoDetectado,
