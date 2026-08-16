@@ -60,19 +60,6 @@
       font-weight: bold;
       min-height: 24px;
     }
-
-    .volver {
-      width: 100%;
-      min-height: 58px;
-      margin-top: 12px;
-      border: 0;
-      border-radius: 12px;
-      background: #666;
-      color: white;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
   </style>
 </head>
 
@@ -91,10 +78,6 @@
     <div id="mensaje" class="mensaje">
       Apunta la cámara al QR del producto.
     </div>
-
-    <button class="volver" onclick="volverALMAQ()">
-      📦 ABRIR ALMAQ
-    </button>
 
   </div>
 
@@ -131,13 +114,6 @@
 
     }, 400);
   }
-
-
-  function volverALMAQ() {
-
-    window.location.href = ALMAQ_URL;
-  }
-
 
   const lector = new Html5QrcodeScanner(
     "reader",
@@ -176,7 +152,6 @@
     },
     false
   );
-
 
   lector.render(
     codigoDetectado,
