@@ -1,4 +1,4 @@
-const CACHE = "almaq-pwa-v2.0.4-pdf-final";
+const CACHE = "almaq-pwa-v2.1.0";
 
 const ASSETS = [
   "./",
