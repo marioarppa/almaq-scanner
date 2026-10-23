@@ -1,166 +1,84 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1F4E78">
-
-  <title>ALMAQ Móvil v2.1.0 · Escáner</title>
-
+  <title>ALMAQ Móvil v2.1.1 · Escáner</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 12px;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #F3F6F9;
-      color: #1F2937;
-    }
-
-    .app {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .titulo {
-      background: #1F4E78;
-      color: white;
-      padding: 18px;
-      border-radius: 14px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 12px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 14px;
-      padding: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
-    }
-
-    #reader {
-      width: 100%;
-      overflow: hidden;
-      border-radius: 12px;
-      background: #000;
-    }
-
-    .mensaje {
-      margin-top: 12px;
-      text-align: center;
-      font-size: 16px;
-      font-weight: bold;
-      min-height: 24px;
-    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; font-family: Arial, Helvetica, sans-serif; background: #F3F6F9; color: #1F2937; }
+    .app { width: 100%; max-width: 600px; margin: 0 auto; }
+    .titulo { background: #1F4E78; color: white; padding: 18px; border-radius: 14px; text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 12px; }
+    .card { background: white; border-radius: 14px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    #reader { width: 100%; overflow: hidden; border-radius: 12px; background: #000; }
+    .mensaje { margin-top: 12px; text-align: center; font-size: 16px; font-weight: bold; min-height: 24px; }
+    .error { color: #B42318; }
   </style>
 </head>
-
 <body>
-
 <div class="app">
-
-  <div class="titulo">
-    📷 ALMAQ · ESCÁNER · v2.1.0
-  </div>
-
+  <div class="titulo">📷 ALMAQ · ESCÁNER · v2.1.1</div>
   <div class="card">
-
     <div id="reader"></div>
-
-    <div id="mensaje" class="mensaje">
-      Apunta la cámara al QR del producto.
-    </div>
-
+    <div id="mensaje" class="mensaje">Apunta la cámara al QR del producto.</div>
   </div>
-
 </div>
-
 <script>
-
-  const ALMAQ_URL =
-    "https://script.google.com/macros/s/AKfycbwGGgxwJqQXdRbl_VDQTlxFHvkqjJAGwXzg6gVKBYn_Cfdpj8rveAqc1rjv0F3LldZu/exec";
-
+  // Implementación de ALMAQ Móvil comprobada en el navegador.
+  const ALMAQ_URL = "https://script.google.com/macros/s/AKfycbwARgMuB_GjpbSrsZE0J4NTmsgCWN2IYSmQDWRMhgGk7TeV2d9WIZ6NiwhOhp4W6P5/exec";
   let terminado = false;
+  const mensaje = document.getElementById("mensaje");
+
+  function extraerCodigo(texto) {
+    const valor = String(texto || "").trim();
+    if (/^\d{10}$/.test(valor)) return valor;
+    try {
+      const url = new URL(valor);
+      // Se extrae solo el código; jamás se navega a la URL antigua del QR.
+      const codigo = (url.searchParams.get("codigo") || "").trim();
+      if (/^\d{10}$/.test(codigo)) return codigo;
+    } catch (e) {}
+    return null;
+  }
 
   function codigoDetectado(texto) {
-
     if (terminado) return;
-
-    terminado = true;
-
-    const codigo = String(texto || "").trim();
-
-    document.getElementById("mensaje").textContent =
-      "✅ Código leído: " + codigo;
-
-    if (navigator.vibrate) {
-      navigator.vibrate(120);
+    const codigo = extraerCodigo(texto);
+    if (!codigo) {
+      mensaje.textContent = "QR no reconocido. Debe contener un código de 10 cifras o una URL ALMAQ con ?codigo=...";
+      mensaje.classList.add("error");
+      return;
     }
-
-    setTimeout(function() {
-
-      window.location.href =
-        ALMAQ_URL +
-        "?codigo=" +
-        encodeURIComponent(codigo);
-
+    terminado = true;
+    mensaje.classList.remove("error");
+    mensaje.textContent = "✅ Código leído: " + codigo + ". Abriendo producto...";
+    if (navigator.vibrate) navigator.vibrate(120);
+    setTimeout(function () {
+      window.location.href = ALMAQ_URL + "?codigo=" + encodeURIComponent(codigo);
     }, 400);
   }
 
-  const lector = new Html5QrcodeScanner(
-    "reader",
-    {
-      fps: 10,
-
-      qrbox: function(viewfinderWidth, viewfinderHeight) {
-
-        const ancho =
-          Math.min(
-            280,
-            Math.floor(viewfinderWidth * 0.8)
-          );
-
-        return {
-          width: ancho,
-          height: ancho
-        };
-      },
-
-      rememberLastUsedCamera: true,
-
-      supportedScanTypes: [
-        Html5QrcodeScanType.SCAN_TYPE_CAMERA
-      ],
-
-      formatsToSupport: [
-        Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E
-      ]
+  const lector = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: function (ancho, alto) {
+      const lado = Math.min(280, Math.floor(Math.min(ancho, alto) * 0.8));
+      return { width: lado, height: lado };
     },
-    false
-  );
-
-  lector.render(
-    codigoDetectado,
-    function() {
-      // Los intentos sin lectura son normales.
-    }
-  );
-
+    rememberLastUsedCamera: true,
+    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E
+    ]
+  }, false);
+  lector.render(codigoDetectado, function () {});
 </script>
-
 </body>
 </html>
