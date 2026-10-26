@@ -721,6 +721,17 @@
     crearClienteALMAQ().withSuccessHandler(function(r){bloquear(false);mensaje(r.mensaje,!r.ok);if(r.producto)mostrarProducto(r.producto);actualizarPendiente();}).withFailureHandler(function(e){bloquear(false);fallo(e);}).revisar(datos);
   }
   document.addEventListener('DOMContentLoaded',actualizarPendiente);
+  let conexionMovimientosALMAQ = false;
+  document.addEventListener('DOMContentLoaded', async function(){
+    bloquear(true);
+    try {
+      const r=await fetch(ALMAQ_API,{method:'POST',credentials:'omit',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({accion:'conexion'})});
+      const datos=await r.json();
+      if(!datos.ok)throw new Error('sin conexión');
+      conexionMovimientosALMAQ=true;bloquear(false);
+    } catch(e) {mensaje('No se pudo conectar para registrar movimientos. Recarga la página antes de operar.',true);}
+  });
+
 
 
   let productoActual = null;
@@ -949,6 +960,8 @@
 
 
   function registrar(tipo) {
+    if (!conexionMovimientosALMAQ) { mensaje('Espera a que se conecte ALMAQ o recarga la página.',true); return; }
+
 
     if (!productoActual) {
       return;
@@ -1239,12 +1252,12 @@
     document.getElementById(
       'btnEntrada'
     ).disabled =
-      valor;
+      valor || !conexionMovimientosALMAQ;
 
     document.getElementById(
       'btnSalida'
     ).disabled =
-      valor;
+      valor || !conexionMovimientosALMAQ;
   }
 
 
