@@ -1,6 +1,1415 @@
-<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ALMAQ · Consulta externa</title><style>body{font:18px Arial;background:#f3f6f9;color:#1f2937;margin:16px}main{max-width:600px;margin:auto}h1{background:#1f4e78;color:white;padding:20px;border-radius:12px}input,button{font:inherit;padding:15px;box-sizing:border-box;max-width:100%;margin:5px 0}button{background:#1f4e78;color:white;border:0;border-radius:8px}#resultado{white-space:pre-wrap;background:white;padding:18px;border-radius:12px;line-height:1.6}</style><main><h1>📦 ALMAQ</h1><p>Consulta externa · solo lectura</p><form id="consulta"><input id="codigo" inputmode="numeric" aria-label="Código" value="8408976986"><button>Consultar producto</button></form><p id="estado"></p><div id="resultado"></div><p><a href="scanner.html">Abrir escáner</a></p></main><script>
-const endpoint="https://script.google.com/macros/s/AKfycbxo4q-ePIVPeZVlnUTMl51AGCSCwcXeCPpSQciuWFkUbC9hmXoRyDxBsmh5wo0Rcscx/exec";
-const form=document.getElementById("consulta"),estado=document.getElementById("estado"),resultado=document.getElementById("resultado");
-async function consultar(e){if(e)e.preventDefault();estado.textContent="Consultando ALMAQ…";resultado.textContent="";form.querySelector("button").disabled=true;try{const url=new URL(endpoint);url.searchParams.set("api","producto");url.searchParams.set("codigo",document.getElementById("codigo").value.trim());const response=await fetch(url,{credentials:"omit",redirect:"follow"});if(!response.ok)throw Error("Respuesta de Google: "+response.status);const r=await response.json();if(!r.ok)throw Error(r.mensaje||"Producto no encontrado");const p=r.producto;resultado.textContent=p.producto+"\nCódigo: "+p.codigo+"\nCategoría: "+p.categoria+"\nStock: "+p.stock+"\nMínimo: "+p.minimo+"\nUbicación: "+p.ubicacion;estado.textContent="Conexión correcta · producto localizado";}catch(error){estado.textContent="No se ha podido consultar: "+error.message;}finally{form.querySelector("button").disabled=false;}}
-form.addEventListener("submit",consultar);const codigo=new URLSearchParams(location.search).get("codigo");if(codigo)document.getElementById("codigo").value=codigo;consultar();
-</script></html>
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#1F4E78">
+
+  <title>ALMAQ Móvil</title>
+
+
+  <style>
+    :root {
+      --azul: #1F4E78;
+      --azul2: #D9EAF7;
+      --verde: #2E7D32;
+      --rojo: #C62828;
+      --amarillo: #F9A825;
+      --fondo: #F3F6F9;
+      --texto: #1F2937;
+      --borde: #D5DCE3;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: max(12px, env(safe-area-inset-top))
+               12px
+               max(18px, env(safe-area-inset-bottom));
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .titulo {
+      background: var(--azul);
+      color: white;
+      border-radius: 14px;
+      padding: 18px 12px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,.10);
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 14px;
+      padding: 13px;
+      margin-bottom: 11px;
+      box-shadow: 0 2px 7px rgba(0,0,0,.04);
+    }
+
+    .scan {
+      width: 100%;
+      min-height: 64px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--azul);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .buscar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 7px;
+    }
+
+    input {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      padding: 0 13px;
+      font-size: 19px;
+      background: white;
+    }
+
+    .btn-buscar {
+      min-width: 78px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--azul2);
+      color: var(--azul);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .producto {
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: bold;
+      margin-bottom: 14px;
+    }
+
+    .datos {
+      display: grid;
+      grid-template-columns: 108px 1fr;
+      gap: 9px;
+      font-size: 17px;
+      align-items: center;
+    }
+
+    .etq {
+      color: #66717c;
+      font-weight: bold;
+    }
+
+    .stock-grande {
+      font-size: 36px;
+      font-weight: bold;
+      color: var(--azul);
+    }
+
+    .estado {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .correcto {
+      background: #D9EAD3;
+      color: #274E13;
+    }
+
+    .bajo {
+      background: #FFF2CC;
+      color: #7F6000;
+    }
+
+    .agotado {
+      background: #F4CCCC;
+      color: #990000;
+    }
+
+    .operacion {
+      display: none;
+    }
+
+    .cantidad-wrap {
+      display: grid;
+      grid-template-columns: 64px 1fr 64px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .cantidad-wrap button {
+      min-height: 60px;
+      border: 0;
+      border-radius: 10px;
+      background: #E8EDF2;
+      font-size: 30px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #cantidad {
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .acciones {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    .entrada,
+    .salida {
+      min-height: 72px;
+      border: 0;
+      border-radius: 12px;
+      color: white;
+      font-size: 21px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .entrada {
+      background: var(--verde);
+    }
+
+    .salida {
+      background: var(--rojo);
+    }
+
+    .escanear-siguiente {
+      display: none;
+      width: 100%;
+      min-height: 68px;
+      margin-top: 10px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--azul);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: default;
+    }
+
+    .mensaje {
+      min-height: 20px;
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .ok {
+      color: var(--verde);
+    }
+
+    .error {
+      color: var(--rojo);
+    }
+
+    .scanner-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,.88);
+      padding: 16px;
+    }
+
+    .scanner-box {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      background: #111;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+      background: black;
+      min-height: 300px;
+      object-fit: cover;
+    }
+
+    .scanner-info {
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .cerrar {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      background: #444;
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .historial-titulo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .historial-titulo button {
+      border: 0;
+      border-radius: 8px;
+      background: #E8EDF2;
+      color: var(--azul);
+      padding: 7px 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .movimiento {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      padding: 8px 0;
+      border-bottom: 1px solid #E7EBEF;
+      font-size: 13px;
+    }
+
+    .movimiento:last-child {
+      border-bottom: 0;
+    }
+
+    .mov-fecha {
+      color: #737D87;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .mov-derecha {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .mov-entrada {
+      color: var(--verde);
+    }
+
+    .mov-salida {
+      color: var(--rojo);
+    }
+
+    .sin-historial {
+      color: #737D87;
+      font-size: 13px;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .nota {
+      font-size: 11px;
+      line-height: 1.35;
+      color: #737D87;
+      text-align: center;
+    }
+
+    .pie {
+      text-align: center;
+      font-size: 10px;
+      color: #8A949E;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+
+      .app {
+        max-width: none;
+      }
+
+      .titulo {
+        font-size: 25px;
+      }
+
+      .buscar {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-buscar {
+        width: 100%;
+        min-height: 54px;
+        font-size: 16px;
+      }
+
+      .datos {
+        grid-template-columns: 100px 1fr;
+        font-size: 17px;
+      }
+
+      .acciones {
+        grid-template-columns: 1fr;
+      }
+
+      .entrada,
+      .salida {
+        min-height: 76px;
+        font-size: 22px;
+      }
+
+      video {
+        min-height: 360px;
+      }
+    }
+
+
+
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+<button id="btnPendiente" hidden onclick="comprobarOperacionPendiente()" style="width:100%;padding:16px;margin-bottom:10px">COMPROBAR OPERACIÓN PENDIENTE</button>
+
+  <div class="titulo">
+    📦 ALMAQ MÓVIL
+  </div>
+
+
+  <div class="card">
+    <label
+      for="usuario"
+      style="display:block;font-size:12px;font-weight:bold;margin-bottom:5px"
+    >
+      👤 Operario
+    </label>
+
+    <input
+      id="usuario"
+      type="text"
+      autocomplete="name"
+      placeholder="Tu nombre"
+      maxlength="60"
+      onchange="guardarUsuario()"
+    >
+  </div>
+
+  <div class="card">
+
+    <button
+      class="scan"
+      onclick="abrirScannerExterno()"
+    >
+      📷 ESCANEAR QR
+    </button>
+
+    <div class="buscar">
+      <input
+        id="codigo"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        placeholder="Código del producto"
+      >
+
+      <button
+        class="btn-buscar"
+        onclick="buscar()"
+      >
+        BUSCAR
+      </button>
+    </div>
+
+    <div
+      id="mensaje"
+      class="mensaje"
+    ></div>
+  </div>
+
+
+  <div
+    id="productoCard"
+    class="card"
+    style="display:none"
+  >
+
+    <div
+      id="nombre"
+      class="producto"
+    >
+      —
+    </div>
+
+    <div class="datos">
+
+      <div class="etq">
+        Código
+      </div>
+      <div id="datoCodigo">
+        —
+      </div>
+
+      <div class="etq">
+        Categoría
+      </div>
+      <div id="categoria">
+        —
+      </div>
+
+      <div class="etq">
+        Stock
+      </div>
+      <div
+        id="stock"
+        class="stock-grande"
+      >
+        —
+      </div>
+
+      <div class="etq">
+        Mínimo
+      </div>
+      <div id="minimo">
+        —
+      </div>
+
+      <div class="etq">
+        Estado
+      </div>
+      <div>
+        <span
+          id="estado"
+          class="estado"
+        >
+          —
+        </span>
+      </div>
+
+      <div class="etq">
+        Ubicación
+      </div>
+      <div id="ubicacion">
+        —
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="operacion"
+    class="card operacion"
+  >
+
+    <div
+      style="font-weight:bold;margin-bottom:8px"
+    >
+      Cantidad
+    </div>
+
+    <div class="cantidad-wrap">
+
+      <button
+        onclick="cambiarCantidad(-1)"
+      >
+        −
+      </button>
+
+      <input
+        id="cantidad"
+        type="number"
+        min="1"
+        step="1"
+        value="1"
+      >
+
+      <button
+        onclick="cambiarCantidad(1)"
+      >
+        +
+      </button>
+
+    </div>
+
+    <div class="acciones">
+
+      <button
+        id="btnEntrada"
+        class="entrada"
+        onclick="registrar('Entrada')"
+      >
+        📥 ENTRADA
+      </button>
+
+      <button
+        id="btnSalida"
+        class="salida"
+        onclick="registrar('Salida')"
+      >
+        📤 SALIDA
+      </button>
+
+    </div>
+
+    <button
+      id="btnEscanearSiguiente"
+      class="escanear-siguiente"
+      onclick="escanearSiguiente()"
+    >
+      📷 ESCANEAR SIGUIENTE PRODUCTO
+    </button>
+  </div>
+
+
+  <div
+    id="historialCard"
+    class="card"
+    style="display:none"
+  >
+
+    <div class="historial-titulo">
+      <span>📜 Historial reciente</span>
+
+      <button
+        onclick="cargarHistorial()"
+      >
+        ↻
+      </button>
+    </div>
+
+    <div id="historialLista">
+      <div class="sin-historial">
+        Sin movimientos.
+      </div>
+    </div>
+  </div>
+
+
+  <div class="card nota">
+    Escanea el QR del producto o introduce manualmente
+    el código de 10 cifras.
+  </div>
+
+  <div class="pie">
+    ALMAQ externo v3.0.0
+  </div>
+
+</div>
+
+
+<div
+  id="scannerModal"
+  class="scanner-modal"
+>
+  <div class="scanner-box">
+
+    <video
+      id="video"
+      playsinline
+      muted
+    ></video>
+
+    <div
+      id="scannerInfo"
+      class="scanner-info"
+    >
+      Apunta la cámara al código QR.
+    </div>
+
+    <button
+      class="cerrar"
+      onclick="cerrarScanner()"
+    >
+      CERRAR CÁMARA
+    </button>
+
+  </div>
+</div>
+
+
+<script>
+
+  // Transporte externo: GET sin cookies y POST de texto, sin reintentos automáticos.
+  const ALMAQ_API = 'https://script.google.com/macros/s/AKfycbxo4q-ePIVPeZVlnUTMl51AGCSCwcXeCPpSQciuWFkUbC9hmXoRyDxBsmh5wo0Rcscx/exec';
+  function nuevoIdALMAQ() {
+    return typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString(36) + '-' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(n){return n.toString(16).padStart(2,'0');}).join('');
+  }
+  function crearClienteALMAQ() {
+    let exito = function(){}, error = fallo;
+    const cliente = {
+      withSuccessHandler: function(fn){exito=fn;return cliente;},
+      withFailureHandler: function(fn){error=fn;return cliente;},
+      buscarProductoALMAQMovil: function(codigo){enviar('producto',{codigo:codigo});},
+      obtenerHistorialALMAQMovil: function(codigo,limite){enviar('historial',{codigo:codigo,limite:limite});},
+      registrarMovimientoALMAQMovil: function(codigo,cantidad,tipo,usuario){
+        const pendiente = JSON.parse(sessionStorage.getItem('ALMAQ_PENDIENTE') || 'null');
+        if(pendiente) {
+          error(new Error('Hay una operación pendiente de comprobar. Usa el botón COMPROBAR OPERACIÓN; no la registres otra vez.'));
+          return;
+        }
+        const datos={accion:'movimiento',codigo:codigo,cantidad:cantidad,tipo:tipo,usuario:usuario,solicitud:nuevoIdALMAQ()};
+        sessionStorage.setItem('ALMAQ_PENDIENTE',JSON.stringify(datos));
+        enviar('movimiento',datos);
+      }
+    };
+    async function enviar(accion,datos){
+      try {
+        const url=new URL(ALMAQ_API);
+        let opciones={credentials:'omit',redirect:'follow'};
+        if(accion==='movimiento'){
+          opciones.method='POST';opciones.headers={'Content-Type':'text/plain;charset=UTF-8'};opciones.body=JSON.stringify(datos);
+        }else{url.searchParams.set('api',accion);Object.keys(datos).forEach(function(k){url.searchParams.set(k,datos[k]);});}
+        const respuesta=await fetch(url,opciones);
+        if(!respuesta.ok)throw new Error('Google respondió '+respuesta.status);
+        const r=await respuesta.json();
+        if(accion==='movimiento' && !r.pendiente)sessionStorage.removeItem('ALMAQ_PENDIENTE');
+        actualizarPendiente();exito(r);
+      }catch(e){actualizarPendiente();error(new Error(accion==='movimiento' ? 'No se ha confirmado la operación. Pulsa COMPROBAR OPERACIÓN para consultar el mismo envío sin duplicarlo.' : 'No se pudo conectar con ALMAQ: '+e.message));}
+    }
+    cliente.revisar=function(datos){enviar('movimiento',datos);};
+    return cliente;
+  }
+  const google={script:{get run(){return crearClienteALMAQ();}}};
+  function actualizarPendiente(){const b=document.getElementById('btnPendiente');if(b)b.hidden=!sessionStorage.getItem('ALMAQ_PENDIENTE');}
+  function comprobarOperacionPendiente(){
+    const datos=JSON.parse(sessionStorage.getItem('ALMAQ_PENDIENTE')||'null');if(!datos)return;
+    bloquear(true);mensaje('Comprobando la misma operación…',false);
+    crearClienteALMAQ().withSuccessHandler(function(r){bloquear(false);mensaje(r.mensaje,!r.ok);if(r.producto)mostrarProducto(r.producto);actualizarPendiente();}).withFailureHandler(function(e){bloquear(false);fallo(e);}).revisar(datos);
+  }
+  document.addEventListener('DOMContentLoaded',actualizarPendiente);
+
+
+  let productoActual = null;
+  let streamCamara = null;
+  let detectorQR = null;
+  let escaneando = false;
+
+  const codigoInicial = new URLSearchParams(location.search).get('codigo') || '';
+
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    function() {
+
+      const usuarioGuardado =
+        leerUsuarioGuardado() || '';
+
+      document.getElementById(
+        'usuario'
+      ).value =
+        usuarioGuardado;
+
+      const input =
+        document.getElementById(
+          'codigo'
+        );
+
+      input.addEventListener(
+        'keydown',
+        function(e) {
+
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            buscar();
+          }
+        }
+      );
+
+      if (codigoInicial) {
+        input.value =
+          codigoInicial;
+        buscar();
+      }
+    }
+  );
+
+
+  function leerUsuarioGuardado() {
+    try { return localStorage.getItem('ALMAQ_USUARIO') || ''; }
+    catch (_) { return ''; }
+  }
+
+  function guardarUsuario() {
+
+    const usuario =
+      document.getElementById(
+        'usuario'
+      ).value.trim();
+
+    if (usuario) {
+      try {
+        localStorage.setItem('ALMAQ_USUARIO', usuario);
+      } catch (_) {
+        // El nombre sigue disponible en el formulario si Android bloquea almacenamiento.
+      }
+    }
+  }
+
+
+  function buscar() {
+
+    const codigo =
+      document
+        .getElementById(
+          'codigo'
+        )
+        .value
+        .trim();
+
+    if (!codigo) {
+
+      mensaje(
+        'Introduce o escanea un código.',
+        true
+      );
+
+      return;
+    }
+
+    mensaje(
+      'Buscando producto...',
+      false
+    );
+
+    google.script.run
+      .withSuccessHandler(
+        function(r) {
+
+          if (!r || !r.ok) {
+
+            limpiarProducto();
+
+            mensaje(
+              r && r.mensaje
+                ? r.mensaje
+                : 'Producto no encontrado.',
+              true
+            );
+
+            return;
+          }
+
+          mostrarProducto(
+            r.producto
+          );
+
+          mensaje(
+            'Producto localizado.',
+            false
+          );
+        }
+      )
+      .withFailureHandler(fallo)
+      .buscarProductoALMAQMovil(
+        codigo
+      );
+  }
+
+
+  function mostrarProducto(p) {
+
+    productoActual = p;
+
+    document.getElementById(
+      'btnEscanearSiguiente'
+    ).style.display =
+      'none';
+
+    document.getElementById(
+      'productoCard'
+    ).style.display =
+      'block';
+
+    document.getElementById(
+      'operacion'
+    ).style.display =
+      'block';
+
+    document.getElementById(
+      'nombre'
+    ).textContent =
+      p.producto || '—';
+
+    document.getElementById(
+      'datoCodigo'
+    ).textContent =
+      p.codigo || '—';
+
+    document.getElementById(
+      'categoria'
+    ).textContent =
+      p.categoria || '—';
+
+    document.getElementById(
+      'stock'
+    ).textContent =
+      p.stock;
+
+    document.getElementById(
+      'minimo'
+    ).textContent =
+      p.minimo;
+
+    document.getElementById(
+      'ubicacion'
+    ).textContent =
+      p.ubicacion || '—';
+
+    const estado =
+      document.getElementById(
+        'estado'
+      );
+
+    estado.textContent =
+      p.estado || '—';
+
+    estado.className =
+      'estado ' +
+      claseEstado(
+        p.estado
+      );
+
+    document.getElementById(
+      'historialCard'
+    ).style.display =
+      'block';
+
+    cargarHistorial();
+  }
+
+
+  function limpiarProducto() {
+
+    productoActual = null;
+
+    document.getElementById(
+      'btnEscanearSiguiente'
+    ).style.display =
+      'none';
+
+    document.getElementById(
+      'productoCard'
+    ).style.display =
+      'none';
+
+    document.getElementById(
+      'operacion'
+    ).style.display =
+      'none';
+
+    document.getElementById(
+      'historialCard'
+    ).style.display =
+      'none';
+  }
+
+
+  function registrar(tipo) {
+
+    if (!productoActual) {
+      return;
+    }
+
+    const cantidad =
+      Number(
+        document.getElementById(
+          'cantidad'
+        ).value
+      );
+
+    if (
+      !cantidad ||
+      cantidad <= 0
+    ) {
+
+      mensaje(
+        'Introduce una cantidad válida.',
+        true
+      );
+
+      return;
+    }
+
+    const usuario =
+      document.getElementById(
+        'usuario'
+      ).value.trim();
+
+    if (!usuario) {
+
+      mensaje(
+        'Indica tu nombre de operario antes de registrar.',
+        true
+      );
+
+      document.getElementById(
+        'usuario'
+      ).focus();
+
+      return;
+    }
+
+    guardarUsuario();
+
+    const nombreProducto =
+      productoActual.producto || productoActual.codigo;
+
+    const confirmado =
+      window.confirm(
+        '¿CONFIRMAR ' +
+        tipo.toUpperCase() +
+        '?\n\n' +
+        nombreProducto +
+        '\nCantidad: ' +
+        cantidad
+      );
+
+    if (!confirmado) {
+      return;
+    }
+
+    bloquear(true);
+
+    mensaje(
+      'Registrando ' +
+      tipo.toLowerCase() +
+      '...',
+      false
+    );
+
+    google.script.run
+      .withSuccessHandler(
+        function(r) {
+
+          bloquear(false);
+
+          if (!r || !r.ok) {
+
+            mensaje(
+              r && r.mensaje
+                ? r.mensaje
+                : 'No se pudo registrar.',
+              true
+            );
+
+            return;
+          }
+
+          if (r.producto) {
+            mostrarProducto(
+              r.producto
+            );
+          } else {
+            cargarHistorial();
+          }
+
+          document.getElementById(
+            'cantidad'
+          ).value =
+            1;
+
+          const stockNuevo =
+            r.producto
+              ? r.producto.stock
+              : '—';
+
+          mensaje(
+            '✅ ' +
+            tipo.toUpperCase() +
+            ' REGISTRADA · Stock actual: ' +
+            stockNuevo,
+            false
+          );
+
+          document.getElementById(
+            'btnEscanearSiguiente'
+          ).style.display =
+            'block';
+
+          if (
+            navigator.vibrate
+          ) {
+            navigator.vibrate(
+              120
+            );
+          }
+        }
+      )
+      .withFailureHandler(
+        function(e) {
+          bloquear(false);
+          fallo(e);
+        }
+      )
+      .registrarMovimientoALMAQMovil(
+        productoActual.codigo,
+        cantidad,
+        tipo,
+        usuario
+      );
+  }
+
+
+
+  function cargarHistorial() {
+
+    if (!productoActual) {
+      return;
+    }
+
+    const lista =
+      document.getElementById(
+        'historialLista'
+      );
+
+    lista.innerHTML =
+      '<div class="sin-historial">Cargando...</div>';
+
+    google.script.run
+      .withSuccessHandler(
+        function(r) {
+
+          if (!r || !r.ok) {
+
+            lista.innerHTML =
+              '<div class="sin-historial">No se pudo cargar el historial.</div>';
+
+            return;
+          }
+
+          const movimientos =
+            r.movimientos || [];
+
+          if (
+            movimientos.length === 0
+          ) {
+
+            lista.innerHTML =
+              '<div class="sin-historial">Este producto todavía no tiene movimientos.</div>';
+
+            return;
+          }
+
+          lista.innerHTML =
+            movimientos
+              .map(function(m) {
+
+                const tipo =
+                  String(
+                    m.tipo || ''
+                  ).toUpperCase();
+
+                const esEntrada =
+                  tipo.indexOf(
+                    'ENTRADA'
+                  ) !== -1;
+
+                const clase =
+                  esEntrada
+                    ? 'mov-entrada'
+                    : 'mov-salida';
+
+                const signo =
+                  esEntrada
+                    ? '+'
+                    : '−';
+
+                const stock =
+                  m.stock === '' ||
+                  m.stock == null
+                    ? '—'
+                    : m.stock;
+
+                return (
+                  '<div class="movimiento">' +
+                    '<div>' +
+                      '<div class="' +
+                        clase +
+                      '"><b>' +
+                        escaparHtmlMovil(
+                          m.tipo || 'Movimiento'
+                        ) +
+                      '</b></div>' +
+                      '<div class="mov-fecha">' +
+                        escaparHtmlMovil(
+                          m.fecha || ''
+                        ) +
+                      '</div>' +
+                    '</div>' +
+                    '<div class="mov-derecha ' +
+                      clase +
+                    '">' +
+                      signo +
+                      escaparHtmlMovil(
+                        m.cantidad
+                      ) +
+                      '<div class="mov-fecha">Stock ' +
+                        escaparHtmlMovil(
+                          stock
+                        ) +
+                      '</div>' +
+                    '</div>' +
+                  '</div>'
+                );
+              })
+              .join('');
+        }
+      )
+      .withFailureHandler(
+        function() {
+
+          lista.innerHTML =
+            '<div class="sin-historial">Error cargando historial.</div>';
+        }
+      )
+      .obtenerHistorialALMAQMovil(
+        productoActual.codigo,
+        10
+      );
+  }
+
+
+  function cambiarCantidad(delta) {
+
+    const input =
+      document.getElementById(
+        'cantidad'
+      );
+
+    let valor =
+      Number(input.value) || 1;
+
+    valor += delta;
+
+    if (valor < 1) {
+      valor = 1;
+    }
+
+    input.value =
+      valor;
+  }
+
+
+  function bloquear(valor) {
+
+    document.getElementById(
+      'btnEntrada'
+    ).disabled =
+      valor;
+
+    document.getElementById(
+      'btnSalida'
+    ).disabled =
+      valor;
+  }
+
+
+  function escanearSiguiente() {
+
+    document.getElementById(
+      'btnEscanearSiguiente'
+    ).style.display =
+      'none';
+
+    document.getElementById(
+      'cantidad'
+    ).value =
+      1;
+
+    document.getElementById(
+      'codigo'
+    ).value =
+      '';
+
+    limpiarProducto();
+
+    mensaje(
+      'Abriendo escáner...',
+      false
+    );
+
+    const enlace = document.createElement('a');
+    enlace.href = 'scanner.html?v=3.0.0';
+    enlace.target = '_top';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+  }
+
+
+  function abrirScannerExterno() {
+
+    mensaje(
+      'Abriendo escáner...',
+      false
+    );
+
+    const enlace = document.createElement('a');
+    enlace.href = 'scanner.html?v=3.0.0';
+    enlace.target = '_top';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+  }
+
+
+  function extraerCodigoQR(valor) {
+
+    valor =
+      String(
+        valor || ''
+      ).trim();
+
+    try {
+
+      if (
+        /^https?:\/\//i.test(
+          valor
+        )
+      ) {
+
+        const url =
+          new URL(valor);
+
+        const codigo =
+          url.searchParams.get(
+            'codigo'
+          );
+
+        if (codigo) {
+          return codigo;
+        }
+      }
+
+    } catch (_) {}
+
+    return valor;
+  }
+
+
+  function claseEstado(estado) {
+
+    estado =
+      String(
+        estado || ''
+      ).toUpperCase();
+
+    if (
+      estado.indexOf(
+        'AGOTADO'
+      ) !== -1
+    ) {
+      return 'agotado';
+    }
+
+    if (
+      estado.indexOf(
+        'BAJO'
+      ) !== -1
+    ) {
+      return 'bajo';
+    }
+
+    return 'correcto';
+  }
+
+
+  function escaparHtmlMovil(texto) {
+
+    return String(
+      texto == null
+        ? ''
+        : texto
+    )
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+
+  function mensaje(
+    texto,
+    error
+  ) {
+
+    const m =
+      document.getElementById(
+        'mensaje'
+      );
+
+    m.textContent =
+      texto || '';
+
+    m.className =
+      'mensaje ' +
+      (
+        error
+          ? 'error'
+          : 'ok'
+      );
+  }
+
+
+  function fallo(e) {
+
+    mensaje(
+      'Error: ' +
+      (
+        e && e.message
+          ? e.message
+          : e
+      ),
+      true
+    );
+  }
+
+</script>
+
+</body>
+</html>
