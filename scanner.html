@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1F4E78">
-  <title>ALMAQ Móvil v2.1.5 · Escáner</title>
+  <title>ALMAQ Móvil v3.0.0 · Escáner</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; }
@@ -19,7 +19,7 @@
 </head>
 <body>
 <div class="app">
-  <div class="titulo">📷 ALMAQ · ESCÁNER · v2.1.5</div>
+  <div class="titulo">📷 ALMAQ · ESCÁNER · v3.0.0</div>
   <div class="card">
     <div id="reader"></div>
     <div id="mensaje" class="mensaje">Apunta la cámara al QR del producto.</div>
@@ -27,8 +27,8 @@
   </div>
 </div>
 <script>
-  // Implementación de ALMAQ Móvil comprobada en el navegador.
-  const ALMAQ_URL = "https://script.google.com/macros/s/AKfycbwARgMuB_GjpbSrsZE0J4NTmsgCWN2lYSmQDWRMhgGk7TeV2d9WlZ6NiwvhOHp4W6P5/exec";
+  // La ficha abre en el mismo sitio externo, sin navegar a Apps Script.
+  const ALMAQ_URL = new URL("consulta.html", location.href).href;
   let terminado = false;
   const mensaje = document.getElementById("mensaje");
   const abrirFicha = document.getElementById("abrirFicha");
@@ -57,13 +57,11 @@
     mensaje.classList.remove("error");
     mensaje.textContent = "✅ Código leído: " + codigo + ". Abriendo producto...";
     if (navigator.vibrate) navigator.vibrate(120);
-    const destino = ALMAQ_URL + "?codigo=" + encodeURIComponent(codigo) + "&authuser=0";
-    abrirFicha.href = /Android/i.test(navigator.userAgent)
-      ? "intent://" + destino.replace(/^https:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(destino) + ";end"
-      : destino;
+    const destino = ALMAQ_URL + "?codigo=" + encodeURIComponent(codigo);
+    abrirFicha.href = destino;
     abrirFicha.style.display = "block";
     mensaje.textContent = "Código leído: " + codigo + ". Si no se abre la ficha, pulsa el botón.";
-    // Android: abrir Chrome mediante una pulsación y conservar una URL web de respaldo.
+    // Abrir la aplicación externa con una pulsación del usuario.
   }
 
   const lector = new Html5QrcodeScanner("reader", {
