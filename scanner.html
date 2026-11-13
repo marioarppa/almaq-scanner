@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1F4E78">
-  <title>ALMAQ Móvil v3.0.0 · Escáner</title>
+  <title>ALMAQ Móvil v3.0.1 · Escáner</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; }
@@ -12,6 +12,9 @@
     .app { width: 100%; max-width: 600px; margin: 0 auto; }
     .titulo { background: #1F4E78; color: white; padding: 18px; border-radius: 14px; text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 12px; }
     .card { background: white; border-radius: 14px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    #video { width:100%; display:block; border-radius:12px; background:#000; max-height:60vh; }
+    button { width:100%; min-height:60px; margin-top:12px; border:0; border-radius:10px; background:#1F4E78; color:white; font-size:20px; font-weight:bold; cursor:pointer; }
+    button:disabled { opacity:.55; }
     #reader { width: 100%; overflow: hidden; border-radius: 12px; background: #000; }
     .mensaje { margin-top: 12px; text-align: center; font-size: 16px; font-weight: bold; min-height: 24px; }
     .error { color: #B42318; }
@@ -19,10 +22,13 @@
 </head>
 <body>
 <div class="app">
-  <div class="titulo">📷 ALMAQ · ESCÁNER · v3.0.0</div>
+  <div class="titulo">📷 ALMAQ · ESCÁNER · v3.0.1</div>
   <div class="card">
-    <div id="reader"></div>
-    <div id="mensaje" class="mensaje">Apunta la cámara al QR del producto.</div>
+    <video id="video" autoplay playsinline muted></video>
+    <div id="reader" style="display:none"></div>
+    <button id="escanear" type="button" disabled>ESCANEAR</button>
+    <button id="activarCamara" type="button" hidden>ACTIVAR CÁMARA</button>
+    <div id="mensaje" class="mensaje">Enfoca el QR y pulsa ESCANEAR.</div>
     <a id="abrirFicha" href="#" target="_self" style="display:none;margin-top:12px;padding:14px;background:#1F4E78;color:white;text-decoration:none;text-align:center;border-radius:10px;font-weight:bold">Abrir ficha del producto</a>
   </div>
 </div>
@@ -54,6 +60,7 @@
       return;
     }
     terminado = true;
+    detenerCamara();
     mensaje.classList.remove("error");
     mensaje.textContent = "✅ Código leído: " + codigo + ". Abriendo producto...";
     if (navigator.vibrate) navigator.vibrate(120);
@@ -64,25 +71,90 @@
     // Abrir la aplicación externa con una pulsación del usuario.
   }
 
-  const lector = new Html5QrcodeScanner("reader", {
-    fps: 10,
-    qrbox: function (ancho, alto) {
-      const lado = Math.min(280, Math.floor(Math.min(ancho, alto) * 0.8));
-      return { width: lado, height: lado };
-    },
-    rememberLastUsedCamera: true,
-    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-    formatsToSupport: [
-      Html5QrcodeSupportedFormats.QR_CODE,
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.UPC_E
-    ]
-  }, false);
-  lector.render(codigoDetectado, function () {});
+  const video = document.getElementById("video");
+  const boton = document.getElementById("escanear");
+  const activar = document.getElementById("activarCamara");
+  let stream = null;
+  let leyendo = false;
+  let sesion = 0;
+  const lector = new Html5Qrcode("reader", { formatsToSupport: [
+    Html5QrcodeSupportedFormats.QR_CODE,
+    Html5QrcodeSupportedFormats.EAN_13,
+    Html5QrcodeSupportedFormats.EAN_8,
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.CODE_39,
+    Html5QrcodeSupportedFormats.UPC_A,
+    Html5QrcodeSupportedFormats.UPC_E
+  ] }, false);
+
+  function detenerCamara() {
+    sesion++;
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    stream = null;
+    video.srcObject = null;
+    boton.disabled = true;
+  }
+
+  async function iniciarCamara() {
+    activar.hidden = true;
+    boton.disabled = true;
+    mensaje.classList.remove("error");
+    mensaje.textContent = "Activando cámara...";
+    const actual = ++sesion;
+    try {
+      const nueva = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+      if (actual !== sesion) { nueva.getTracks().forEach(t => t.stop()); return; }
+      stream = nueva;
+      video.srcObject = stream;
+      await video.play();
+      if (actual !== sesion) return;
+      boton.disabled = false;
+      mensaje.textContent = "Enfoca el QR y pulsa ESCANEAR.";
+    } catch (_) {
+      if (actual !== sesion) return;
+      detenerCamara();
+      mensaje.classList.add("error");
+      mensaje.textContent = "No se pudo abrir la cámara. Permite su acceso y pulsa ACTIVAR CÁMARA.";
+      activar.hidden = false;
+    }
+  }
+
+  async function escanearUnaVez() {
+    if (leyendo || terminado || !stream) return;
+    leyendo = true;
+    boton.disabled = true;
+    const actual = sesion;
+    mensaje.classList.remove("error");
+    mensaje.textContent = "Leyendo QR...";
+    try {
+      if (!video.videoWidth || !video.videoHeight) throw new Error("Cámara no preparada");
+      const captura = document.createElement("canvas");
+      captura.width = video.videoWidth;
+      captura.height = video.videoHeight;
+      captura.getContext("2d").drawImage(video, 0, 0);
+      const blob = await new Promise(resolve => captura.toBlob(resolve, "image/png"));
+      if (!blob || actual !== sesion) return;
+      // Una única captura y decodificación por pulsación. Sin bucle de lectura.
+      const texto = await lector.scanFile(new File([blob], "captura.png", { type: "image/png" }), false);
+      if (actual === sesion) codigoDetectado(texto);
+    } catch (_) {
+      if (actual === sesion) {
+        mensaje.classList.add("error");
+        mensaje.textContent = "No se ha leído un código. Enfoca el QR y vuelve a pulsar ESCANEAR.";
+      }
+    } finally {
+      leyendo = false;
+      boton.disabled = terminado || !stream;
+    }
+  }
+
+  boton.addEventListener("click", escanearUnaVez);
+  activar.addEventListener("click", iniciarCamara);
+  window.addEventListener("pagehide", detenerCamara);
+  iniciarCamara();
 </script>
 </body>
 </html>
