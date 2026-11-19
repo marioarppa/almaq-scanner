@@ -575,6 +575,11 @@
 
     </div>
 
+    <div id="destinoSalidaWrap" hidden style="margin-top:12px">
+      <label for="destinoSalida" style="display:block;font-weight:bold;margin-bottom:6px">¿A dónde va?</label>
+      <input id="destinoSalida" type="text" maxlength="200" autocomplete="off" placeholder="Escribe el destino del material">
+    </div>
+
     <div class="acciones">
 
       <button
@@ -635,7 +640,7 @@
   </div>
 
   <div class="pie">
-    ALMAQ externo v3.0.0
+    ALMAQ externo v3.1.0
   </div>
 
 </div>
@@ -685,13 +690,13 @@
       withFailureHandler: function(fn){error=fn;return cliente;},
       buscarProductoALMAQMovil: function(codigo){enviar('producto',{codigo:codigo});},
       obtenerHistorialALMAQMovil: function(codigo,limite){enviar('historial',{codigo:codigo,limite:limite});},
-      registrarMovimientoALMAQMovil: function(codigo,cantidad,tipo,usuario){
+      registrarMovimientoALMAQMovil: function(codigo,cantidad,tipo,usuario,destino){
         const pendiente = JSON.parse(sessionStorage.getItem('ALMAQ_PENDIENTE') || 'null');
         if(pendiente) {
           error(new Error('Hay una operación pendiente de comprobar. Usa el botón COMPROBAR OPERACIÓN; no la registres otra vez.'));
           return;
         }
-        const datos={accion:'movimiento',codigo:codigo,cantidad:cantidad,tipo:tipo,usuario:usuario,solicitud:nuevoIdALMAQ()};
+        const datos={accion:'movimiento',codigo:codigo,cantidad:cantidad,tipo:tipo,usuario:usuario,destino:destino,solicitud:nuevoIdALMAQ()};
         sessionStorage.setItem('ALMAQ_PENDIENTE',JSON.stringify(datos));
         enviar('movimiento',datos);
       }
@@ -864,6 +869,7 @@
   function mostrarProducto(p) {
 
     productoActual = p;
+    limpiarDestinoSalida();
 
     document.getElementById(
       'btnEscanearSiguiente'
@@ -936,6 +942,7 @@
   function limpiarProducto() {
 
     productoActual = null;
+    limpiarDestinoSalida();
 
     document.getElementById(
       'btnEscanearSiguiente'
@@ -958,6 +965,12 @@
       'none';
   }
 
+
+  function limpiarDestinoSalida() {
+    document.getElementById("destinoSalida").value = "";
+    document.getElementById("destinoSalidaWrap").hidden = true;
+    document.getElementById("btnSalida").textContent = "📤 SALIDA";
+  }
 
   function registrar(tipo) {
     if (!conexionMovimientosALMAQ) { mensaje('Espera a que se conecte ALMAQ o recarga la página.',true); return; }
@@ -1006,6 +1019,27 @@
       return;
     }
 
+    let destino = "";
+    if (tipo === "Salida") {
+      const campo = document.getElementById("destinoSalida");
+      const bloque = document.getElementById("destinoSalidaWrap");
+      if (bloque.hidden) {
+        bloque.hidden = false;
+        document.getElementById("btnSalida").textContent = "CONFIRMAR SALIDA";
+        campo.focus();
+        mensaje("Indica a dónde va el material y pulsa CONFIRMAR SALIDA.", false);
+        return;
+      }
+      destino = campo.value.trim();
+      if (!destino) {
+        mensaje("Indica a dónde va el material.", true);
+        campo.focus();
+        return;
+      }
+    } else {
+      limpiarDestinoSalida();
+    }
+
     guardarUsuario();
 
     const nombreProducto =
@@ -1018,7 +1052,7 @@
         '?\n\n' +
         nombreProducto +
         '\nCantidad: ' +
-        cantidad
+        cantidad + (destino ? '\nDestino: ' + destino : '')
       );
 
     if (!confirmado) {
@@ -1102,7 +1136,8 @@
         productoActual.codigo,
         cantidad,
         tipo,
-        usuario
+        usuario,
+        destino
       );
   }
 
@@ -1192,6 +1227,7 @@
                           m.fecha || ''
                         ) +
                       '</div>' +
+                      (m.destino ? '<div class="mov-fecha">Destino: ' + escaparHtmlMovil(m.destino) + '</div>' : '') +
                     '</div>' +
                     '<div class="mov-derecha ' +
                       clase +
